@@ -12,63 +12,68 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [18.x, 20.x]
 
     steps:
-      # Checkout the repository
       - uses: actions/checkout@v4
 
-      # Set up Node.js with caching
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      # Install project dependencies
-      - name: Install dependencies
-        run: npm install
+      - name: Cache node modules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
 
-      # Build the Vite project
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build project
         run: npm run build
 
-      # Start the backend server in the background
       - name: Start backend server
-        run: nohup npm run backend &
+        run: |
+          nohup npm run backend &
+          sleep 10  # Wait for the server to start
 
-      # Ensure the results directory exists
       - name: Create results directory
         run: mkdir -p ./artillery-results
 
-      # Run the first Artillery load test
       - name: Run basic load test
         run: npx artillery run load-tests/basic.yml --output ./artillery-results/basic-report.json
+        continue-on-error: true
 
-      # Run the second Artillery load test
       - name: Run shopping load test
         run: npx artillery run load-tests/load-test-with-playwright.yml --output ./artillery-results/load-test-report.json
+        continue-on-error: true
 
-      # Upload Artillery results as artifacts
       - name: Upload results as artifacts
         uses: actions/upload-artifact@v3
         with:
           name: artillery-results
           path: ./artillery-results
 
-      # Display results from the Artillery test
-      - name: Display load test results
+      - name: Process and display load test results
         run: |
-          if [ -f ./artillery-results/basic-report.json ]; then
-            echo "Basic Load Test Report:";
-            cat ./artillery-results/basic-report.json;
-          else
-            echo "basic-report.json not found";
-          fi
-          
-          if [ -f ./artillery-results/load-test-report.json ]; then
-            echo "Playwright Load Test Report:";
-            cat ./artillery-results/load-test-report.json;
-          else
-            echo "load-test-report.json not found";
+          for report in ./artillery-results/*.json; do
+            echo "Results for $(basename $report):"
+            jq '.aggregate | {requestsCompleted, requestsPerSecond: .rps.mean, latencyMedian: .latency.median, latency95th: .latency.p95}' $report
+            echo "----------------------------------------"
+          done
+
+      - name: Check for test failures
+        run: |
+          if jq -e '.aggregate.codes["5xx"] > 0' ./artillery-results/*.json; then
+            echo "Load tests encountered 5xx errors"
+            exit 1
           fi

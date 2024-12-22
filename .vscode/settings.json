@@ -2,7 +2,9 @@
   "yaml.schemas": {
     "https://www.artillery.io/schema.json": [
       "file:///Users/thomasfrank/Desktop/endpoint-testning-mataffaren/load-tests/basic.yml",
-      "file:///c%3A/Users/Admin/OneDrive/Masa%C3%BCst%C3%BC/Mataffaren-Artillery/load-tests/basic.yml"
+      "file:///c%3A/Users/Admin/OneDrive/Masa%C3%BCst%C3%BC/Mataffaren-Artillery/load-tests/basic.yml",
+      "file:///c%3A/Users/Admin/OneDrive/Masa%C3%BCst%C3%BC/Mataffaren-Artillery/load-tests/realistic.yml",
+      "file:///c%3A/Users/Admin/OneDrive/Masa%C3%BCst%C3%BC/Mataffaren-Artillery/load-tests/load-test-with-playwright.yml"
     ]
   }
 }

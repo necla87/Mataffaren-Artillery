@@ -1,0 +1,74 @@
+name: Run Artillery Load Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  load-testing-and-backend:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      # Checkout the repository
+      - uses: actions/checkout@v4
+
+      # Set up Node.js with caching
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      # Install project dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Build the Vite project
+      - name: Build project
+        run: npm run build
+
+      # Start the backend server in the background
+      - name: Start backend server
+        run: nohup npm run backend &
+
+      # Ensure the results directory exists
+      - name: Create results directory
+        run: mkdir -p ./artillery-results
+
+      # Run the first Artillery load test
+      - name: Run basic load test
+        run: npx artillery run load-tests/basic.yml --output ./artillery-results/basic-report.json
+
+      # Run the second Artillery load test
+      - name: Run shopping load test
+        run: npx artillery run load-tests/load-test-with-playwright.yml --output ./artillery-results/load-test-report.json
+
+      # Upload Artillery results as artifacts
+      - name: Upload results as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artillery-results
+          path: ./artillery-results
+
+      # Display results from the Artillery test
+      - name: Display load test results
+        run: |
+          if [ -f ./artillery-results/basic-report.json ]; then
+            echo "Basic Load Test Report:";
+            cat ./artillery-results/basic-report.json;
+          else
+            echo "basic-report.json not found";
+          fi
+          
+          if [ -f ./artillery-results/load-test-report.json ]; then
+            echo "Playwright Load Test Report:";
+            cat ./artillery-results/load-test-report.json;
+          else
+            echo "load-test-report.json not found";
+          fi

@@ -1,0 +1,47 @@
+config:
+  target: http://127.0.0.1:4000
+  phases:
+    - duration: 10
+      arrivalRate: 1
+      rampTo: 5
+      name: Warm up phase
+    - duration: 10
+      arrivalRate: 5
+      rampTo: 10
+      name: Ramp up load
+    - duration: 10
+      arrivalRate: 10
+      rampTo: 30
+      name: Spike phase
+
+  plugins:
+    ensure: {}
+    apdex: {}
+    metrics-by-endpoint: {}
+
+  apdex:
+    threshold: 100
+
+  ensure:
+    thresholds:
+      - http.response_time.p99: 100
+      - http.response_time.p95: 75
+
+scenarios:
+  - flow:
+      - get:
+          url: "/kategori/frukt-och-gront"
+      - get:
+          url: "/kategori/kott-chark-och-fagel"
+      - get:
+          url: "/kategori/mejeri-ost-agg"
+      - get:
+          url: "/kategori/bröd-kakor"
+      - get:
+          url: "/kategori/knäckebröd-skorpor"
+      - get:
+          url: "/kategori/vegetariskt"
+      - post:
+          url: "/api/some-endpoint"
+          json:
+            key: value

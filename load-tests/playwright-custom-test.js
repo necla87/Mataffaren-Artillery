@@ -26,9 +26,9 @@ module.exports = {
 
       // Step 3: Perform product-related interactions
       const productActions = [
-        { product: 'Kyckling Hel Färsk Sverige', verifyText: 'Kyckling Hel Färsk Sverige' },
-        { product: 'Vetekaka 24-pack', verifyText: 'Vetekaka 24-pack' },
-        { product: 'Kardemumma Skorpor', verifyText: 'Kardemumma Skorpor' },
+        { product: 'Kycklingben Import', verifyText: 'Kycklingben Import' },
+        { product: 'Havrebröd', verifyText: 'Havrebröd' },
+        { product: 'Veteskorpor Eko', verifyText: 'Veteskorpor Eko' },
       ];
 
       for (const action of productActions) {
@@ -45,8 +45,8 @@ module.exports = {
 
       // Step 4: Simulate user navigation and interactions
       const navigationSteps = [
-        { label: 'Bröd & Kakor', action: 'click' },
-        { label: 'Knäckebröd & Skorpor', action: 'click' },
+        { label: 'Fryst', action: 'click' },
+        { label: 'Barn', action: 'click' },
         { label: 'Vegetariskt', action: 'click' },
       ];
 
